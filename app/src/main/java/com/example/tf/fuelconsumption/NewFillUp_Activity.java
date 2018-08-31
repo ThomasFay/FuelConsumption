@@ -1,6 +1,8 @@
 package com.example.tf.fuelconsumption;
 
 import android.app.DatePickerDialog;
+import android.arch.lifecycle.ViewModelProvider;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.icu.util.Calendar;
@@ -25,9 +27,7 @@ public class NewFillUp_Activity extends AppCompatActivity implements DatePickerD
 
     public AppDataBase db;
 
-    private int selected_year;
-    private int selected_day;
-    private int selected_month;
+    private NewFillUp_viewModel dateVW;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,10 +57,12 @@ public class NewFillUp_Activity extends AppCompatActivity implements DatePickerD
             }
         });
 
+        dateVW = ViewModelProviders.of(this).get(NewFillUp_viewModel.class);
+
+
         Calendar c = Calendar.getInstance();
-        selected_day = c.get(Calendar.DAY_OF_MONTH);
-        selected_month = c.get(Calendar.MONTH) + 1;
-        selected_year = c.get(Calendar.YEAR);
+        if (!dateVW.get_isSet())
+            dateVW.setDate(c.get(Calendar.DAY_OF_MONTH),c.get(Calendar.MONTH) + 1,c.get(Calendar.YEAR));
         Button date_picker = findViewById(R.id.date_picker);
         date_picker.setText(formatDateText());
 
@@ -69,7 +71,7 @@ public class NewFillUp_Activity extends AppCompatActivity implements DatePickerD
 
     private String formatDateText() {
         String month_string = new String();
-        switch (selected_month) {
+        switch (dateVW.getSelected_month()) {
             case 1:
                 month_string = "Janv";
                 break;
@@ -107,7 +109,7 @@ public class NewFillUp_Activity extends AppCompatActivity implements DatePickerD
                 month_string = "Déc";
                 break;
         }
-        String date_text = selected_day + " " + month_string + " " + selected_year;
+        String date_text = dateVW.getSelected_day() + " " + month_string + " " + dateVW.getSelected_year();
         return date_text;
 
     }
@@ -195,7 +197,7 @@ public class NewFillUp_Activity extends AppCompatActivity implements DatePickerD
             litter = price_litter;
         }
 
-        final FillUps fp = getReadyForInsertion(km, unitprice, litter, full,selected_year,selected_month,selected_day);
+        final FillUps fp = getReadyForInsertion(km, unitprice, litter, full,dateVW.getSelected_year(),dateVW.getSelected_month(),dateVW.getSelected_day());
 
         if (error_formular) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert);
@@ -234,10 +236,7 @@ public class NewFillUp_Activity extends AppCompatActivity implements DatePickerD
 
     @Override
     public void onDateSet(DatePicker view,int year, int month, int day){
-
-        selected_year = year;
-        selected_day = day;
-        selected_month = month + 1;
+        dateVW.setDate(day,month+1,year);
         Button datePicker = findViewById(R.id.date_picker);
         datePicker.setText(formatDateText());
     }
